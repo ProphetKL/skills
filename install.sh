@@ -1,9 +1,16 @@
 #!/bin/bash
 # 家庭信息发布平台 · Skill 安装脚本
-# 支持 Claude Code 和 OpenClaw 两种平台
 #
 # 用法：
 #   curl -fsSL https://raw.githubusercontent.com/ProphetKL/skills/main/install.sh | bash
+#
+# 可选参数（通过 bash -s -- 传入）：
+#   --global      安装到 ~/.openclaw/skills/（OpenClaw 全局）
+#   --claudecode  安装到 .claude/commands/（Claude Code）
+#
+# 示例：
+#   curl -fsSL https://raw.githubusercontent.com/ProphetKL/skills/main/install.sh | bash -s -- --global
+#   curl -fsSL https://raw.githubusercontent.com/ProphetKL/skills/main/install.sh | bash -s -- --claudecode
 
 set -e
 
@@ -28,40 +35,26 @@ if ! command -v curl &>/dev/null; then
   red "错误：需要安装 curl"; exit 1
 fi
 
-# ── 检测平台 ──────────────────────────────────
-detect_platform() {
-  if command -v openclaw &>/dev/null || [ -d "$HOME/.openclaw" ]; then
-    echo "openclaw"
-  else
-    echo "claudecode"
-  fi
-}
+# ── 解析参数，默认 OpenClaw 本地 ──────────────
+PLATFORM="openclaw-local"
+INSTALL_DIR="./skills/whatsapp-发布"
 
-PLATFORM=$(detect_platform)
+for arg in "$@"; do
+  case "$arg" in
+    --global)
+      PLATFORM="openclaw-global"
+      INSTALL_DIR="$HOME/.openclaw/skills/whatsapp-发布"
+      ;;
+    --claudecode)
+      PLATFORM="claudecode"
+      INSTALL_DIR=".claude/commands"
+      ;;
+  esac
+done
 
-echo "  检测到平台：$PLATFORM"
+echo "  安装平台：$PLATFORM"
+echo "  安装目录：$INSTALL_DIR"
 echo ""
-echo "  请选择安装平台："
-echo "  1) OpenClaw（默认，安装到 ./skills/ 目录）"
-echo "  2) OpenClaw 全局（安装到 ~/.openclaw/skills/）"
-echo "  3) Claude Code（安装到 .claude/commands/）"
-printf "  请输入选项 [1/2/3，直接回车默认 1]："
-read -r choice
-
-case "${choice:-1}" in
-  2)
-    PLATFORM="openclaw-global"
-    INSTALL_DIR="$HOME/.openclaw/skills/whatsapp-发布"
-    ;;
-  3)
-    PLATFORM="claudecode"
-    INSTALL_DIR=".claude/commands"
-    ;;
-  *)
-    PLATFORM="openclaw-local"
-    INSTALL_DIR="./skills/whatsapp-发布"
-    ;;
-esac
 
 # ── 安装 ──────────────────────────────────────
 mkdir -p "$INSTALL_DIR"
@@ -84,41 +77,24 @@ else
   echo "  使用方法：在 OpenClaw 中直接说「帮我发消息到 WhatsApp」"
 fi
 
-# ── 配置服务器信息 ────────────────────────────
+# ── 写入配置模板 ──────────────────────────────
 CONFIG_FILE=".claude/whatsapp-config.json"
 
 echo ""
 if [ -f "$CONFIG_FILE" ]; then
-  yellow "⚠ 发现已有配置文件：${CONFIG_FILE}"
-  printf "  是否覆盖？[y/N] "
-  read -r overwrite
-  if [[ ! "$overwrite" =~ ^[Yy]$ ]]; then
-    echo "  跳过配置，保留现有配置。"
-    echo ""
-    green "安装完成！"
-    exit 0
-  fi
-fi
-
-bold "请填写服务器连接信息（直接回车跳过，后续可手动编辑 ${CONFIG_FILE}）："
-echo ""
-printf "  服务器地址（如 http://1.2.3.4:3000）："; read -r base_url
-printf "  登录用户名（默认 admin）："; read -r auth_user
-printf "  登录密码："; read -rs auth_pass; echo ""
-
-base_url="${base_url:-http://YOUR_SERVER_IP:3000}"
-auth_user="${auth_user:-admin}"
-auth_pass="${auth_pass:-YOUR_PASSWORD}"
-
-mkdir -p ".claude"
-cat > "$CONFIG_FILE" <<EOF
+  yellow "⚠ 已有配置文件：${CONFIG_FILE}，跳过创建。"
+else
+  mkdir -p ".claude"
+  cat > "$CONFIG_FILE" <<'EOF'
 {
-  "baseUrl": "${base_url}",
-  "user": "${auth_user}",
-  "pass": "${auth_pass}"
+  "baseUrl": "http://YOUR_SERVER_IP:3000",
+  "user": "admin",
+  "pass": "YOUR_PASSWORD"
 }
 EOF
-green "✓ 配置已保存：${CONFIG_FILE}"
+  green "✓ 配置模板已创建：${CONFIG_FILE}"
+  yellow "  请编辑该文件，填写你的服务器地址和密码。"
+fi
 
 # ── 完成 ──────────────────────────────────────
 echo ""
