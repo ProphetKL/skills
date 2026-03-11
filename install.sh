@@ -42,24 +42,24 @@ PLATFORM=$(detect_platform)
 echo "  检测到平台：$PLATFORM"
 echo ""
 echo "  请选择安装平台："
-echo "  1) Claude Code（默认，安装到 .claude/commands/）"
-echo "  2) OpenClaw（安装到 ./skills/ 目录）"
-echo "  3) OpenClaw 全局（安装到 ~/.openclaw/skills/）"
+echo "  1) OpenClaw（默认，安装到 ./skills/ 目录）"
+echo "  2) OpenClaw 全局（安装到 ~/.openclaw/skills/）"
+echo "  3) Claude Code（安装到 .claude/commands/）"
 printf "  请输入选项 [1/2/3，直接回车默认 1]："
 read -r choice
 
 case "${choice:-1}" in
   2)
-    PLATFORM="openclaw-local"
-    INSTALL_DIR="./skills/whatsapp-发布"
-    ;;
-  3)
     PLATFORM="openclaw-global"
     INSTALL_DIR="$HOME/.openclaw/skills/whatsapp-发布"
     ;;
-  *)
+  3)
     PLATFORM="claudecode"
     INSTALL_DIR=".claude/commands"
+    ;;
+  *)
+    PLATFORM="openclaw-local"
+    INSTALL_DIR="./skills/whatsapp-发布"
     ;;
 esac
 
