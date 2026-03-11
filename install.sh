@@ -5,7 +5,7 @@
 #   curl -fsSL https://raw.githubusercontent.com/ProphetKL/skills/main/install.sh | bash
 #
 # 可选参数（通过 bash -s -- 传入）：
-#   --global      安装到 ~/.openclaw/skills/（OpenClaw 全局）
+#   --global      安装到 ~/.openclaw/workspace/skills/（OpenClaw 全局）
 #   --claudecode  安装到 .claude/commands/（Claude Code）
 #
 # 示例：
@@ -43,7 +43,7 @@ for arg in "$@"; do
   case "$arg" in
     --global)
       PLATFORM="openclaw-global"
-      INSTALL_DIR="$HOME/.openclaw/skills/whatsapp-发布"
+      INSTALL_DIR="$HOME/.openclaw/workspace/skills/whatsapp-发布"
       ;;
     --claudecode)
       PLATFORM="claudecode"
@@ -87,9 +87,14 @@ else
   mkdir -p ".claude"
   cat > "$CONFIG_FILE" <<'EOF'
 {
-  "baseUrl": "http://YOUR_SERVER_IP:3000",
-  "user": "admin",
-  "pass": "YOUR_PASSWORD"
+  "ssh": {
+    "host": "YOUR_SERVER_IP",
+    "user": "root",
+    "keyPath": "~/.ssh/id_rsa",
+    "port": 22
+  },
+  "projectPath": "/root/whatsapp-bot/cloud",
+  "auth": "admin:YOUR_PASSWORD"
 }
 EOF
   green "✓ 配置模板已创建：${CONFIG_FILE}"
